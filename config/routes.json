@@ -1,0 +1,130 @@
+{
+  "origins": {
+    "CNF": {"priority": 1, "region": "BH", "name": "Belo Horizonte (Confins)"},
+    "PLU": {"priority": 1, "region": "BH", "name": "Belo Horizonte (Pampulha)"},
+    "GRU": {"priority": 2, "region": "SP", "name": "São Paulo (Guarulhos)"},
+    "CGH": {"priority": 2, "region": "SP", "name": "São Paulo (Congonhas)"},
+    "VCP": {"priority": 2, "region": "SP", "name": "Campinas (Viracopos)"},
+    "GIG": {"priority": 3, "region": "RJ", "name": "Rio de Janeiro (Galeão)"},
+    "SDU": {"priority": 3, "region": "RJ", "name": "Rio de Janeiro (Santos Dumont)"}
+  },
+  "destinations": {
+    "europa": {
+      "reino_unido_irlanda": [
+        "LHR","LGW","STN","LTN","LCY","MAN","EDI","GLA","BHX","BRS",
+        "NCL","LBA","EMA","BFS","BHD","ABZ","INV","NQY","SOU","CWL",
+        "DSA","BOH","EXT","NWI","PIK","SYY","KIR","ORK","DUB","SNN","NOC"
+      ],
+      "franca": [
+        "CDG","ORY","NCE","LYS","MRS","TLS","BOD","NTE","SXB",
+        "PGF","BIA","AJA","FSC","LDE","PUY","RNS","BES","LRT",
+        "EBU","GNB","MLH","CMF","DLE","LRH","URO","VHY"
+      ],
+      "espanha_portugal": [
+        "MAD","BCN","PMI","AGP","ALC","VLC","SVQ","IBZ","MAH",
+        "TFS","TFN","LPA","ACE","FUE","SPC","VDE","GMZ","OVD","SCQ",
+        "BIO","SDR","ZAZ","GRX","LEI","REU","GRO","MJV","PNA","VIT",
+        "LEN","RGS","SLM","TOJ",
+        "LIS","OPO","FAO","FNC","PXO","PDL","TER","HOR","SMA","BGZ"
+      ],
+      "italia": [
+        "FCO","MXP","LIN","BGY","VCE","TSF","NAP","CTA","PMO","BLQ",
+        "PSA","TRN","BRI","BDS","SUF","REG","OLB","CAG","AHO","TTB",
+        "PSR","AOI","PEG","VRN","VBS","CRV","ZAH","TAR","BZO","GOA"
+      ],
+      "alemanha_austria_suica": [
+        "FRA","MUC","BER","HAM","DUS","CGN","STR","NUE","LEJ","HAJ",
+        "DRE","DTM","FDH","FMM","FKB","SCN","BRE","DRS","ERF","FMO",
+        "AGB","BWE","GWT","PAD","RLG",
+        "VIE","SZG","INN","GRZ","LNZ","KLU",
+        "ZRH","GVA","BSL","LUG","BRN","SIR"
+      ],
+      "benelux": [
+        "BRU","CRL","ANR","LGG",
+        "AMS","EIN","RTM","GRQ","MST","ENS",
+        "LUX"
+      ],
+      "nordicos": [
+        "CPH","BLL","AAL","RNN","KRP","ODE","TED",
+        "ARN","BMA","GOT","MMX","LLA","UME","VBY","KRN","OSD","SDL",
+        "NYO","VST","HAD","KID","MXX","RNB","THN","VXO",
+        "OSL","BGO","TRD","TOS","SVG","KRS","AES","BOO","EVE","ALF",
+        "HAU","KSU","MOL","SVJ","VRY","LKN","MJF","FDE","HFT",
+        "HEL","TMP","OUL","RVN","KUO","VAA","JOE","KTT","IVL","SVL",
+        "KEF","RKV","AEY","EGS","HZK","IFJ","VEY","SIJ","THO"
+      ],
+      "leste_europeu_balcas": [
+        "WAW","WMI","KRK","GDN","KTW","POZ","WRO","BZG","LUZ","RZE","SZZ","LCJ",
+        "PRG","BRQ","OSR","KLV","PED",
+        "BUD","DEB","SOB",
+        "OTP","CLJ","TSR","IAS","SBZ","CRA","BCM","SUJ","TGM","OMR",
+        "SOF","VAR","BOJ","PDV","GOZ",
+        "BEG","INI","KVO","UZC",
+        "ZAG","SPU","DBV","ZAD","PUY","RJK","OSI","LSZ",
+        "LJU","MBX",
+        "SKG","ATH","JTR","JMK","RHO","HER","CHQ","KGS","ZTH","CFU",
+        "KVA","EFL","PVK","AXD","JSH","JNX","KLX","LRS","MJT","SMI","VOL",
+        "TIA","PRN","SKP","OHD",
+        "SJJ","BNX","TZL","OMO",
+        "POD","TIV",
+        "IST","SAW","AYT","ADB","BJV","ESB","DLM","GZP","ASR","VAN",
+        "ERZ","TZX","MQM","NAV","SZF","HTY","GZT","DNZ","KYA",
+        "MLA",
+        "RIX","LPX","VNO","KUN","PLQ",
+        "TLL","TAY","KDL","URE","EET"
+      ]
+    },
+    "america_norte": {
+      "eua": ["JFK","EWR","LGA","MIA","FLL","LAX","SFO","ORD","ATL","BOS","IAD","IAH","DFW","MCO"],
+      "canada": ["YYZ","YVR","YUL","YYC"],
+      "mexico": ["MEX","CUN","GDL"]
+    },
+    "asia": {
+      "leste_asiatico": ["NRT","HND","KIX","NGO","OKA","ICN","GMP","PUS","PEK","PVG","CAN","HKG","TPE"],
+      "sudeste_asiatico": ["BKK","DMK","SIN","KUL","DPS","CGK","HAN","SGN","MNL","RGN","VTE","PNH"],
+      "india_oriente_medio": ["BOM","DEL","MAA","BLR","CCU","DXB","AUH","DOH","AMM","CAI","TLV"]
+    }
+  },
+  "hubs": {
+    "europa": ["LHR","CDG","AMS","MAD","FCO","FRA","IST","LIS","VIE","ZRH","BRU","ARN","HEL","CPH","ATH"],
+    "america_norte": ["JFK","MIA","LAX","ORD","BOS"],
+    "asia": ["NRT","SIN","BKK","HKG","ICN","DXB"]
+  },
+  "travel_window": {
+    "from": "2027-08-01",
+    "to": "2028-02-28"
+  },
+  "thresholds_brl": {
+    "europa": 3500,
+    "america_norte": 2800,
+    "asia": 4000
+  },
+  "max_stops": 2,
+  "booking_windows": {
+    "europa":       {"sweet_min": 90, "sweet_max": 210, "too_early": 300},
+    "america_norte":{"sweet_min": 70, "sweet_max": 180, "too_early": 270},
+    "asia":         {"sweet_min": 120,"sweet_max": 270, "too_early": 365}
+  },
+  "ground_transport_costs_brl": {
+    "BH_to_SP_bus": 180,
+    "BH_to_SP_flight": 400,
+    "BH_to_RJ_bus": 200,
+    "BH_to_RJ_flight": 450
+  },
+  "deals_feeds": [
+    "https://www.passagenspromo.com.br/feed",
+    "https://www.melhorresdestinos.com.br/feed",
+    "https://www.vaideprom.com.br/feed",
+    "https://www.voopter.com.br/feed"
+  ],
+  "deals_keywords_destination": [
+    "europa", "london", "paris", "roma", "madrid", "amsterdam", "lisboa",
+    "eua", "new york", "miami", "orlando", "canadá", "canada",
+    "tokyo", "bali", "tailândia", "japão", "coreia", "cingapura"
+  ],
+  "deals_keywords_promo": [
+    "black friday", "cyber monday", "promoção relâmpago", "oferta relâmpago",
+    "cupom", "código promo", "desconto extra", "oferta exclusiva",
+    "semana da aviação", "liquidação", "flash sale", "super oferta"
+  ]
+}
