@@ -39,12 +39,8 @@ def notify_error(context: str, error: Exception | str, critical: bool = False) -
 
 
 def notify_no_results(origin: str, region: str) -> None:
-    """Warn when a search returns zero results — may indicate API issue."""
-    _send(
-        f"⚠️ <b>Sem resultados</b>\n\n"
-        f"Nenhuma passagem encontrada de <b>{origin}</b> para <b>{REGION_NAMES.get(region, region)}</b>.\n"
-        f"Pode ser dado temporariamente indisponível na Travelpayouts API."
-    )
+    """Log only — sem resultados é normal quando a API não tem dados cacheados."""
+    logger.info("Sem resultados para %s→%s (normal se API sem cache)", origin, region)
 
 
 def _send(text: str, parse_mode: str = "HTML") -> bool:
@@ -98,7 +94,7 @@ def notify_offers(offers_by_tier: dict[str, list], routes: dict) -> None:
 def notify_daily_summary(all_offers: list, routes: dict) -> None:
     """Send one daily summary with the best offer per region."""
     if not all_offers:
-        _send("📊 <b>Resumo Diário — Flight Watcher</b>\n\nNenhuma oferta qualificada encontrada hoje.")
+        _send("📊 <b>Resumo — sem ofertas hoje</b>\nAPI sem dados novos. Próxima busca às 15h.")
         return
 
     by_region: dict[str, list] = {}
@@ -106,25 +102,24 @@ def notify_daily_summary(all_offers: list, routes: dict) -> None:
         r = offer.get("region", "europa")
         by_region.setdefault(r, []).append(offer)
 
-    lines = ["📊 <b>Resumo Diário — Melhores Passagens</b>\n"]
+    lines = ["✈️ <b>Resumo do dia</b>\n"]
 
     for region, offers in by_region.items():
         best = min(offers, key=lambda o: o["price_brl"])
         region_name = REGION_NAMES.get(region, region)
+        tier = best["score"]["tier"]
+        tier_emoji = TIER_EMOJI.get(tier, "")
         hist = best.get("hist") or {}
         p50 = hist.get("percentiles", {}).get("p50")
-        p50_str = f" | Média histórica: R$ {p50:,.0f}" if p50 else ""
+        vs_media = f" (média R$ {p50:,.0f})" if p50 else ""
 
         lines.append(
-            f"<b>{region_name}</b>\n"
-            f"  ✈️ {best['origin']} → {best['destination']}  "
-            f"<b>R$ {best['price_brl']:,.0f}</b>  "
-            f"(Score: {best['score']['total']}/100){p50_str}\n"
-            f"  📅 {best['departure_date']}  |  {best['stops']} escala(s)\n"
-            f"  🔗 <a href=\"{best['booking_link']}\">Ver oferta</a>\n"
+            f"{tier_emoji} <b>{region_name}</b>  {best['origin']}→{best['destination']}\n"
+            f"   💰 R$ {best['price_brl']:,.0f}{vs_media} · {best['departure_date'][:7]}\n"
+            f"   🔗 <a href=\"{best['booking_link']}\">Ver oferta</a>"
         )
 
-    _send("\n".join(lines))
+    _send("\n\n".join(lines))
 
 
 def notify_deals(deals: list) -> None:

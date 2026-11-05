@@ -227,7 +227,11 @@ def main():
             if k == args.origin.upper()
         }
 
-    # SerpApi: busca independente em tempo real (1 chamada/run, rota prioritária seguinte)
+    # Inicializa estruturas antes de qualquer busca
+    offers_by_tier: dict[str, list] = {"MAXIMO": [], "EXCELENTE": [], "BOM": [], "RESUMO": []}
+    all_offers: list[dict] = []
+
+    # SerpApi: busca independente em tempo real (apenas no run da manhã)
     if SERPAPI_KEY:
         logger.info("SerpApi: busca independente em tempo real...")
         try:
@@ -237,22 +241,26 @@ def main():
                 try:
                     _process_offer(offer, region, history, fx, offers_by_tier, all_offers)
                 except Exception as e:
-                    notify_error("_process_offer(SerpApi)", e)
+                    logger.warning("_process_offer(SerpApi) falhou: %s", e)
         except Exception as e:
-            notify_error("run_independent_search(SerpApi)", e, critical=False)
+            logger.error("run_independent_search(SerpApi) falhou: %s", e)
 
     logger.info("Starting Travelpayouts search...")
-    offers_by_tier, all_offers = run_search(routes, history, fx)
+    tp_offers_by_tier, tp_all_offers = run_search(routes, history, fx)
+
+    # Mescla resultados Travelpayouts com SerpApi
+    for tier in offers_by_tier:
+        offers_by_tier[tier].extend(tp_offers_by_tier.get(tier, []))
+    all_offers.extend(tp_all_offers)
 
     logger.info("Checking multi-origin arbitrage...")
     also_check_via_sp(routes, history, fx, offers_by_tier, all_offers)
 
     logger.info(
-        "Done. MAXIMO=%d EXCELENTE=%d BOM=%d RESUMO=%d",
+        "Done. MAXIMO=%d EXCELENTE=%d BOM=%d",
         len(offers_by_tier["MAXIMO"]),
         len(offers_by_tier["EXCELENTE"]),
         len(offers_by_tier["BOM"]),
-        len(offers_by_tier["RESUMO"]),
     )
 
     deals = fetch_deals(routes)
@@ -260,7 +268,10 @@ def main():
     if any(offers_by_tier[t] for t in ("MAXIMO", "EXCELENTE", "BOM")):
         notify_offers(offers_by_tier, routes)
 
-    notify_daily_summary(all_offers, routes)
+    # Resumo diário: apenas 1x/dia (run da manhã) para não poluir o Telegram
+    morning_run = os.getenv("SERPAPI_RUN", "false").lower() == "true"
+    if morning_run:
+        notify_daily_summary(all_offers, routes)
 
     if deals:
         notify_deals(deals)
