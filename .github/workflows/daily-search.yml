@@ -34,11 +34,12 @@ jobs:
           TELEGRAM_BOT_TOKEN:   ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID:     ${{ secrets.TELEGRAM_CHAT_ID }}
           TELEGRAM_CHAT_ID_2:   ${{ secrets.TELEGRAM_CHAT_ID_2 }}
+          SERPAPI_KEY:          ${{ secrets.SERPAPI_KEY }}
 
-      - name: Commit updated price history
+      - name: Commit updated data files
         run: |
           git config user.name "flight-watcher-bot"
           git config user.email "bot@users.noreply.github.com"
-          git add data/price_history.json
-          git diff --staged --quiet || git commit -m "chore: update price history [$(date -u +'%Y-%m-%d')]"
+          git add data/price_history.json data/subscribers.json data/telegram_offset.json
+          git diff --staged --quiet || git commit -m "chore: update data [$(date -u +'%Y-%m-%d')]"
           git push

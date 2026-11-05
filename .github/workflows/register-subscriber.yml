@@ -1,0 +1,190 @@
+name: Registrar Novo Assinante
+
+# Como usar:
+#   OPÇÃO A (automático) — rode "Escutar Novos /start" abaixo. Qualquer pessoa
+#   que mandar /start para o bot é registrada automaticamente.
+#
+#   OPÇÃO B (manual) — rode "Adicionar por Chat ID" e informe o chat_id.
+#   O chat_id pode ser obtido pedindo para a pessoa usar @userinfobot no Telegram.
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Ação'
+        required: true
+        default: 'listen'
+        type: choice
+        options:
+          - listen      # processa novas mensagens /start do Telegram
+          - add         # adiciona chat_id manualmente
+          - list        # lista assinantes atuais
+      chat_id:
+        description: 'Chat ID para adicionar (somente se action=add)'
+        required: false
+        default: ''
+      name:
+        description: 'Nome do assinante (opcional, para action=add)'
+        required: false
+        default: ''
+
+jobs:
+  manage-subscribers:
+    name: Gerenciar Assinantes
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Manage subscribers
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          ACTION:   ${{ inputs.action }}
+          CHAT_ID:  ${{ inputs.chat_id }}
+          SUB_NAME: ${{ inputs.name }}
+        run: |
+          python - <<'PYEOF'
+          import json, os, requests
+          from pathlib import Path
+          from datetime import date
+
+          BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
+          ACTION    = os.environ.get("ACTION", "listen")
+          CHAT_ID   = os.environ.get("CHAT_ID", "").strip()
+          SUB_NAME  = os.environ.get("SUB_NAME", "").strip()
+
+          SUBS_FILE   = Path("data/subscribers.json")
+          OFFSET_FILE = Path("data/telegram_offset.json")
+
+          def load_subs():
+              if SUBS_FILE.exists():
+                  return json.loads(SUBS_FILE.read_text())
+              return {"subscribers": []}
+
+          def save_subs(data):
+              SUBS_FILE.parent.mkdir(parents=True, exist_ok=True)
+              SUBS_FILE.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n")
+
+          def load_offset():
+              if OFFSET_FILE.exists():
+                  return json.loads(OFFSET_FILE.read_text()).get("offset", 0)
+              return 0
+
+          def save_offset(offset):
+              OFFSET_FILE.parent.mkdir(parents=True, exist_ok=True)
+              OFFSET_FILE.write_text(json.dumps({"offset": offset}) + "\n")
+
+          def tg_send(chat_id, text):
+              try:
+                  requests.post(
+                      f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage",
+                      json={"chat_id": chat_id, "text": text, "parse_mode": "HTML"},
+                      timeout=15,
+                  )
+              except Exception as e:
+                  print(f"  [warn] Telegram send failed: {e}")
+
+          def add_subscriber(chat_id, name=""):
+              data = load_subs()
+              existing = [s.get("chat_id") for s in data["subscribers"]]
+              if chat_id in existing:
+                  print(f"  Já cadastrado: {chat_id}")
+                  return False
+              data["subscribers"].append({
+                  "chat_id": chat_id,
+                  "name": name or chat_id,
+                  "added": date.today().isoformat(),
+              })
+              save_subs(data)
+              print(f"  ✅ Registrado: {chat_id} ({name or '-'})")
+              return True
+
+          # ── LIST ────────────────────────────────────────────────────────────
+          if ACTION == "list":
+              data = load_subs()
+              subs = data.get("subscribers", [])
+              print(f"Assinantes cadastrados ({len(subs)}):")
+              for s in subs:
+                  print(f"  {s.get('chat_id')}  {s.get('name','')}  (desde {s.get('added','')})")
+
+          # ── ADD ─────────────────────────────────────────────────────────────
+          elif ACTION == "add":
+              if not CHAT_ID:
+                  print("::error::Informe o chat_id no campo 'Chat ID'")
+                  exit(1)
+              added = add_subscriber(CHAT_ID, SUB_NAME)
+              if added:
+                  tg_send(CHAT_ID,
+                      "✈️ <b>Flight Watcher</b>\n\n"
+                      "Você foi cadastrado! Passará a receber alertas de passagens baratas "
+                      "para Europa, América do Norte e Ásia.\n\n"
+                      "<i>Saídas de BH, SP e RJ — a partir de ago/2027.</i>"
+                  )
+                  print(f"  Mensagem de boas-vindas enviada para {CHAT_ID}")
+
+          # ── LISTEN ──────────────────────────────────────────────────────────
+          else:  # listen
+              offset = load_offset()
+              print(f"Polling Telegram (offset={offset})...")
+
+              try:
+                  resp = requests.get(
+                      f"https://api.telegram.org/bot{BOT_TOKEN}/getUpdates",
+                      params={"offset": offset, "timeout": 5, "limit": 100},
+                      timeout=20,
+                  )
+                  resp.raise_for_status()
+                  updates = resp.json().get("result", [])
+              except Exception as e:
+                  print(f"::error::Falha ao buscar atualizações do Telegram: {e}")
+                  exit(1)
+
+              print(f"  {len(updates)} update(s) recebido(s)")
+              new_offset = offset
+              registered = []
+
+              for update in updates:
+                  new_offset = max(new_offset, update["update_id"] + 1)
+                  msg = update.get("message") or update.get("channel_post") or {}
+                  text = msg.get("text", "").strip()
+                  chat = msg.get("chat", {})
+                  cid  = str(chat.get("id", ""))
+                  fname = chat.get("first_name", "") or chat.get("title", "")
+
+                  if text.startswith("/start") and cid:
+                      print(f"  /start de {cid} ({fname})")
+                      added = add_subscriber(cid, fname)
+                      if added:
+                          tg_send(cid,
+                              "✈️ <b>Flight Watcher</b>\n\n"
+                              "Olá! Você foi cadastrado com sucesso e passará a receber "
+                              "alertas de passagens baratas para Europa, América do Norte e Ásia.\n\n"
+                              "<i>Saídas de BH, SP e RJ — viagens a partir de ago/2027.</i>"
+                          )
+                          registered.append(f"{fname} ({cid})")
+                      else:
+                          tg_send(cid, "✈️ Você já está cadastrado no Flight Watcher! Aguarde os alertas.")
+
+              save_offset(new_offset)
+              if registered:
+                  print(f"  Novos assinantes: {', '.join(registered)}")
+              else:
+                  print("  Nenhum novo assinante nesta rodada.")
+
+          PYEOF
+
+      - name: Commit subscriber changes
+        run: |
+          git config user.name "flight-watcher-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add data/subscribers.json data/telegram_offset.json
+          git diff --staged --quiet || git commit -m "chore: update subscribers [$(date -u +'%Y-%m-%d %H:%M')]"
+          git push

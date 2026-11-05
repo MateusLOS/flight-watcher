@@ -32,6 +32,8 @@ jobs:
           TRAVELPAYOUTS_TOKEN: ${{ secrets.TRAVELPAYOUTS_TOKEN }}
           TELEGRAM_BOT_TOKEN:  ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID:    ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_CHAT_ID_2:  ${{ secrets.TELEGRAM_CHAT_ID_2 }}
+          SERPAPI_KEY:         ${{ secrets.SERPAPI_KEY }}
 
       - name: Run RSS deals-only check (between full searches)
         run: python main.py --deals-only
@@ -39,6 +41,8 @@ jobs:
           TRAVELPAYOUTS_TOKEN: ${{ secrets.TRAVELPAYOUTS_TOKEN }}
           TELEGRAM_BOT_TOKEN:  ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID:    ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_CHAT_ID_2:  ${{ secrets.TELEGRAM_CHAT_ID_2 }}
+          SERPAPI_KEY:         ${{ secrets.SERPAPI_KEY }}
 
       - name: Commit updated price history
         run: |

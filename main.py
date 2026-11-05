@@ -12,11 +12,12 @@ import logging
 import os
 from datetime import date, timedelta
 
-from src.config import DRY_RUN, load_routes, get_all_destination_airports, get_destination_region
+from src.config import DRY_RUN, SERPAPI_KEY, load_routes, get_all_destination_airports, get_destination_region
 from src.history import load_history, save_history, update_route_price, get_route_stats
 from src.scorer import compute_opportunity_score
 from src.searcher import get_cheapest_destinations, get_cheapest_dates, get_exchange_rate
 from src.deals import fetch_deals
+from src.serp_verifier import verify_top_offers
 from src.notifier import notify_offers, notify_daily_summary, notify_deals, notify_test, notify_error, notify_no_results
 
 logging.basicConfig(
@@ -239,6 +240,15 @@ def main():
         len(offers_by_tier["BOM"]),
         len(offers_by_tier["RESUMO"]),
     )
+
+    # Real-time cross-check: verify MAXIMO and EXCELENTE offers via Google Flights (SerpApi)
+    if SERPAPI_KEY:
+        for tier in ("MAXIMO", "EXCELENTE"):
+            if offers_by_tier[tier]:
+                try:
+                    offers_by_tier[tier] = verify_top_offers(offers_by_tier[tier])
+                except Exception as e:
+                    notify_error("verify_top_offers(SerpApi)", e, critical=False)
 
     deals = fetch_deals(routes)
 

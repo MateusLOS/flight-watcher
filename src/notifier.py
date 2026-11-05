@@ -2,7 +2,7 @@ import logging
 
 import requests
 
-from src.config import TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, TELEGRAM_CHAT_ID_2, DRY_RUN
+from src.config import TELEGRAM_BOT_TOKEN, DRY_RUN, load_subscribers
 
 logger = logging.getLogger(__name__)
 
@@ -52,9 +52,7 @@ def _send(text: str, parse_mode: str = "HTML") -> bool:
         print("[DRY RUN] Telegram message:\n", text)
         return True
 
-    recipients = [TELEGRAM_CHAT_ID]
-    if TELEGRAM_CHAT_ID_2:
-        recipients.append(TELEGRAM_CHAT_ID_2)
+    recipients = load_subscribers()
 
     success = True
     for chat_id in recipients:
@@ -201,6 +199,15 @@ def _format_offer_message(offer: dict) -> str:
         f"volatil:{breakdown.get('volatility',0):.0f}"
     )
 
+    # SerpApi verification badge
+    serp_badge = ""
+    serp_price = offer.get("serp_price")
+    if serp_price is not None:
+        if offer.get("serp_verified"):
+            serp_badge = f"\n✅ <i>Google Flights confirmou: R$ {serp_price:,.0f}</i>"
+        else:
+            serp_badge = f"\n⚡ <i>Google Flights: R$ {serp_price:,.0f} (divergência — verifique)</i>"
+
     return (
         f"{emoji} <b>OFERTA {tier}</b> — Score: {score['total']}/100\n"
         f"<i>({score_detail})</i>\n\n"
@@ -208,8 +215,9 @@ def _format_offer_message(offer: dict) -> str:
         f"📅 {offer['departure_date']} · {stops} escala(s){layover_str}\n"
         f"⏱️ {duration_str} total\n"
         f"💰 <b>R$ {offer['price_brl']:,.0f}</b>"
+        f"{serp_badge}"
         f"{history_line}\n"
         f"🏢 {offer.get('carrier','')}"
         f"{vol_warning}{season_note}\n\n"
-        f"🔗 <a href=\"{offer['booking_link']}\">Ver oferta no Google Flights</a>"
+        f"🔗 <a href=\"{offer['booking_link']}\">Ver oferta</a>"
     )
