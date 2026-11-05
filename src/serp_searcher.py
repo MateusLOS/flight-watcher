@@ -26,41 +26,60 @@ _ENDPOINT = "https://serpapi.com/search"
 CALLS_PER_DAY = 8
 
 # Rotas prioritárias em ordem de importância.
-# A cada run, busca a próxima da lista (rotação contínua).
+# Foco: França, Itália e Leste Europeu (destinos prioritários do usuário).
+# A cada run, busca as 8 próximas da lista (rotação contínua).
+# CNF (BH) primeiro por ser a origem prioritária, depois GRU e GIG.
 PRIORITY_ROUTES = [
     # (origin, destination, region)
-    ("CNF", "LHR", "europa"),
-    ("CNF", "CDG", "europa"),
-    ("CNF", "MAD", "europa"),
-    ("CNF", "LIS", "europa"),
-    ("CNF", "FCO", "europa"),
-    ("CNF", "AMS", "europa"),
-    ("GRU", "LHR", "europa"),
+
+    # ── FRANÇA ────────────────────────────────────────────────────────────────
+    ("CNF", "CDG", "europa"),   # Paris Charles de Gaulle
+    ("CNF", "NCE", "europa"),   # Nice — Sul da França
     ("GRU", "CDG", "europa"),
-    ("GRU", "MAD", "europa"),
-    ("GRU", "MXP", "europa"),
-    ("GRU", "FRA", "europa"),
-    ("GRU", "AMS", "europa"),
-    ("GRU", "LIS", "europa"),
-    ("GRU", "JFK", "america_norte"),
-    ("GRU", "MIA", "america_norte"),
-    ("GRU", "NRT", "asia"),
-    ("GRU", "BKK", "asia"),
-    ("GRU", "SIN", "asia"),
-    ("GIG", "LHR", "europa"),
+    ("GRU", "NCE", "europa"),
+    ("GRU", "LYS", "europa"),   # Lyon
     ("GIG", "CDG", "europa"),
+
+    # ── ITÁLIA ────────────────────────────────────────────────────────────────
+    ("CNF", "FCO", "europa"),   # Roma Fiumicino
+    ("CNF", "MXP", "europa"),   # Milão Malpensa
+    ("GRU", "FCO", "europa"),
+    ("GRU", "MXP", "europa"),
+    ("GRU", "VCE", "europa"),   # Veneza
+    ("GRU", "NAP", "europa"),   # Nápoles
+    ("GRU", "BGY", "europa"),   # Milão Bergamo (hub Ryanair — tarifas baratas)
+    ("GIG", "FCO", "europa"),
+
+    # ── LESTE EUROPEU ─────────────────────────────────────────────────────────
+    ("GRU", "ATH", "europa"),   # Atenas — porta de entrada Grécia/Balcãs
+    ("GRU", "IST", "europa"),   # Istambul — hub para Leste Europeu e Oriente
+    ("GRU", "WAW", "europa"),   # Varsóvia — hub para Europa Central
+    ("GRU", "PRG", "europa"),   # Praga
+    ("GRU", "BUD", "europa"),   # Budapeste
+    ("GRU", "OTP", "europa"),   # Bucareste
+    ("CNF", "ATH", "europa"),
+    ("CNF", "IST", "europa"),
+    ("GIG", "ATH", "europa"),
+
+    # ── HUBS ÚTEIS (conexões frequentes para destinos acima) ──────────────────
+    ("GRU", "LHR", "europa"),   # Londres — conexão frequente para Leste Europeu
+    ("GRU", "MAD", "europa"),   # Madrid — conexões Iberia para Leste
+    ("GRU", "LIS", "europa"),   # Lisboa — TAP com boas conexões Europa
 ]
 
-# Datas de partida a testar dentro da janela de viagem.
-# Para cada rota, busca o mês mais próximo da lista que ainda não foi buscado.
+# Datas de partida: foco em set–dez/2027 (prioridade do usuário).
+# Agosto e janeiro como margem para validar mais opções.
 SEARCH_DATES = [
-    "2027-08-04",  # início de agosto (baixa relativa dentro da alta temporada)
-    "2027-09-07",  # setembro — pós-alta temporada, geralmente mais barato
-    "2027-10-06",  # outubro — baixa temporada europeia
-    "2027-11-04",  # novembro
-    "2027-12-01",  # dezembro — antes das festas
-    "2028-01-07",  # janeiro — baixa temporada
-    "2028-02-03",  # fevereiro — carnaval / inverno europeu
+    "2027-09-08",   # início de setembro — pós-alta temporada, começa baratear
+    "2027-10-07",   # outubro — baixa temporada europeia, ótimo custo-benefício
+    "2027-11-04",   # novembro — muito barato, especialmente Leste Europeu
+    "2027-12-02",   # dezembro — antes das festas de fim de ano
+    "2027-09-22",   # segunda quinzena de setembro
+    "2027-10-21",   # segunda quinzena de outubro
+    "2027-11-18",   # segunda quinzena de novembro
+    "2027-12-16",   # segunda quinzena de dezembro (cuidado com alta das festas)
+    "2027-08-05",   # agosto — margem para comparar alta temporada
+    "2028-01-07",   # janeiro — margem baixa temporada
 ]
 
 STATE_PATH = Path(__file__).parent.parent / "data" / "serpapi_state.json"
