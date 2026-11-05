@@ -13,6 +13,7 @@ TRAVELPAYOUTS_TOKEN = os.environ["TRAVELPAYOUTS_TOKEN"]
 
 TELEGRAM_BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 TELEGRAM_CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
+TELEGRAM_CHAT_ID_2 = os.getenv("TELEGRAM_CHAT_ID_2", "")  # opcional: segundo destinatário
 
 DRY_RUN = os.getenv("DRY_RUN", "false").lower() == "true"
 TEST_NOTIFY = os.getenv("TEST_NOTIFY", "false").lower() == "true"

@@ -2,7 +2,9 @@ name: Daily Flight Search
 
 on:
   schedule:
-    - cron: '0 8 * * *'   # 08:00 UTC = 05:00 BRT (antes do trabalho)
+    - cron: '0 8 * * *'    # 08:00 UTC = 05:00 BRT (manhã)
+    - cron: '0 18 * * *'   # 18:00 UTC = 15:00 BRT (tarde)
+    - cron: '0 4 * * *'    # 04:00 UTC = 01:00 BRT (madrugada)
   workflow_dispatch:        # Permite rodar manualmente pela interface do GitHub
 
 jobs:
@@ -28,9 +30,10 @@ jobs:
       - name: Run flight search
         run: python main.py
         env:
-          TRAVELPAYOUTS_TOKEN: ${{ secrets.TRAVELPAYOUTS_TOKEN }}
-          TELEGRAM_BOT_TOKEN:  ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID:    ${{ secrets.TELEGRAM_CHAT_ID }}
+          TRAVELPAYOUTS_TOKEN:  ${{ secrets.TRAVELPAYOUTS_TOKEN }}
+          TELEGRAM_BOT_TOKEN:   ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID:     ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_CHAT_ID_2:   ${{ secrets.TELEGRAM_CHAT_ID_2 }}
 
       - name: Commit updated price history
         run: |

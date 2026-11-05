@@ -2,7 +2,7 @@ import logging
 
 import requests
 
-from src.config import TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, DRY_RUN
+from src.config import TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, TELEGRAM_CHAT_ID_2, DRY_RUN
 
 logger = logging.getLogger(__name__)
 
@@ -51,22 +51,29 @@ def _send(text: str, parse_mode: str = "HTML") -> bool:
     if DRY_RUN:
         print("[DRY RUN] Telegram message:\n", text)
         return True
-    try:
-        resp = requests.post(
-            f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
-            json={
-                "chat_id": TELEGRAM_CHAT_ID,
-                "text": text,
-                "parse_mode": parse_mode,
-                "disable_web_page_preview": False,
-            },
-            timeout=15,
-        )
-        resp.raise_for_status()
-        return True
-    except Exception as e:
-        logger.error("Telegram send failed: %s", e)
-        return False
+
+    recipients = [TELEGRAM_CHAT_ID]
+    if TELEGRAM_CHAT_ID_2:
+        recipients.append(TELEGRAM_CHAT_ID_2)
+
+    success = True
+    for chat_id in recipients:
+        try:
+            resp = requests.post(
+                f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
+                json={
+                    "chat_id": chat_id,
+                    "text": text,
+                    "parse_mode": parse_mode,
+                    "disable_web_page_preview": False,
+                },
+                timeout=15,
+            )
+            resp.raise_for_status()
+        except Exception as e:
+            logger.error("Telegram send failed (chat_id=%s): %s", chat_id, e)
+            success = False
+    return success
 
 
 def notify_offers(offers_by_tier: dict[str, list], routes: dict) -> None:
