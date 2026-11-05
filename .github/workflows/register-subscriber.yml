@@ -1,13 +1,14 @@
 name: Registrar Novo Assinante
 
-# Como usar:
-#   OPÇÃO A (automático) — rode "Escutar Novos /start" abaixo. Qualquer pessoa
-#   que mandar /start para o bot é registrada automaticamente.
+# Roda automaticamente a cada 15 minutos para capturar novos /start no bot.
+# Quando alguém mandar /start, em até 15 minutos é registrado e recebe
+# mensagem de boas-vindas — sem nenhuma ação manual necessária.
 #
-#   OPÇÃO B (manual) — rode "Adicionar por Chat ID" e informe o chat_id.
-#   O chat_id pode ser obtido pedindo para a pessoa usar @userinfobot no Telegram.
+# Também pode ser acionado manualmente para adicionar por chat_id ou listar.
 
 on:
+  schedule:
+    - cron: '*/15 * * * *'   # a cada 15 minutos
   workflow_dispatch:
     inputs:
       action:
@@ -47,7 +48,7 @@ jobs:
       - name: Manage subscribers
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          ACTION:   ${{ inputs.action }}
+          ACTION:   ${{ inputs.action || 'listen' }}
           CHAT_ID:  ${{ inputs.chat_id }}
           SUB_NAME: ${{ inputs.name }}
         run: |
