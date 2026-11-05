@@ -1,3 +1,14 @@
 {
-  "subscribers": []
+  "subscribers": [
+    {
+      "chat_id": "1249789266",
+      "name": "Mateus",
+      "added": "2026-11-05"
+    },
+    {
+      "chat_id": "1725397848",
+      "name": "Larissa",
+      "added": "2026-11-05"
+    }
+  ]
 }
