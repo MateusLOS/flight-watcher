@@ -199,14 +199,12 @@ def _format_offer_message(offer: dict) -> str:
         f"volatil:{breakdown.get('volatility',0):.0f}"
     )
 
-    # SerpApi verification badge
-    serp_badge = ""
-    serp_price = offer.get("serp_price")
-    if serp_price is not None:
-        if offer.get("serp_verified"):
-            serp_badge = f"\n✅ <i>Google Flights confirmou: R$ {serp_price:,.0f}</i>"
-        else:
-            serp_badge = f"\n⚡ <i>Google Flights: R$ {serp_price:,.0f} (divergência — verifique)</i>"
+    # Fonte dos dados
+    source = offer.get("source", "travelpayouts")
+    if source == "serpapi":
+        source_line = "\n🔍 <i>Fonte: Google Flights (tempo real)</i>"
+    else:
+        source_line = "\n🗄️ <i>Fonte: Travelpayouts (cache 24–48h)</i>"
 
     return (
         f"{emoji} <b>OFERTA {tier}</b> — Score: {score['total']}/100\n"
@@ -215,9 +213,9 @@ def _format_offer_message(offer: dict) -> str:
         f"📅 {offer['departure_date']} · {stops} escala(s){layover_str}\n"
         f"⏱️ {duration_str} total\n"
         f"💰 <b>R$ {offer['price_brl']:,.0f}</b>"
-        f"{serp_badge}"
         f"{history_line}\n"
         f"🏢 {offer.get('carrier','')}"
+        f"{source_line}"
         f"{vol_warning}{season_note}\n\n"
         f"🔗 <a href=\"{offer['booking_link']}\">Ver oferta</a>"
     )

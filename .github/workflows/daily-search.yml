@@ -35,6 +35,8 @@ jobs:
           TELEGRAM_CHAT_ID:     ${{ secrets.TELEGRAM_CHAT_ID }}
           TELEGRAM_CHAT_ID_2:   ${{ secrets.TELEGRAM_CHAT_ID_2 }}
           SERPAPI_KEY:          ${{ secrets.SERPAPI_KEY }}
+          # SerpApi roda apenas 1x/dia (run da manhã = 08:00 UTC)
+          SERPAPI_RUN:          ${{ github.event.schedule == '0 8 * * *' && 'true' || (github.event_name == 'workflow_dispatch' && 'true' || 'false') }}
 
       - name: Commit updated data files
         run: |

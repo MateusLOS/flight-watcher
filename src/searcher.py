@@ -73,6 +73,7 @@ def get_cheapest_destinations(origin: str, departure_month: str | None = None) -
                 ),
                 "fare_basis": "",
                 "layovers": [],
+                "source": "travelpayouts",
             })
         except (KeyError, ValueError):
             continue
@@ -115,6 +116,7 @@ def get_cheapest_dates(origin: str, destination: str,
                                             item.get("departure_at", "")[:10]),
                 "fare_basis": "",
                 "layovers": [],
+                "source": "travelpayouts",
             })
         except (KeyError, ValueError):
             continue

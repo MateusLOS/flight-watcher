@@ -19,7 +19,11 @@ import requests
 logger = logging.getLogger(__name__)
 
 SERPAPI_KEY = os.getenv("SERPAPI_KEY", "")
+SERPAPI_RUN = os.getenv("SERPAPI_RUN", "false").lower() == "true"
 _ENDPOINT = "https://serpapi.com/search"
+
+# Chamadas por execução diária (1x/dia × 8 rotas = 240/mês dentro das 250)
+CALLS_PER_DAY = 8
 
 # Rotas prioritárias em ordem de importância.
 # A cada run, busca a próxima da lista (rotação contínua).
@@ -140,18 +144,21 @@ def _search(origin: str, destination: str, dep_date: str) -> list[dict]:
     return sorted(offers, key=lambda o: o["price_brl"])
 
 
-def run_independent_search(calls_budget: int = 1) -> list[dict]:
+def run_independent_search() -> list[dict]:
     """
-    Executa a busca independente do SerpApi.
+    Executa a busca independente do SerpApi (apenas 1x/dia, run da manhã).
 
-    A cada chamada avança a fila de rotas × datas (round-robin), garantindo
-    que ao longo do mês todas as rotas prioritárias sejam cobertas com preços
-    ao vivo do Google Flights.
+    Faz CALLS_PER_DAY chamadas avançando a fila de rotas × datas (round-robin).
+    Com 8 chamadas/dia × 30 dias = 240 chamadas/mês (dentro das 250 do plano).
 
-    Retorna lista de ofertas (a mais barata por rota buscada neste run).
+    Retorna lista de ofertas (a mais barata por rota buscada).
     """
     if not SERPAPI_KEY:
         logger.info("SERPAPI_KEY não configurado — busca independente ignorada")
+        return []
+
+    if not SERPAPI_RUN:
+        logger.info("SerpApi: não é o run da manhã — pulando busca independente")
         return []
 
     state = _load_state()
@@ -161,7 +168,7 @@ def run_independent_search(calls_budget: int = 1) -> list[dict]:
     results: list[dict] = []
     calls_used = 0
 
-    for _ in range(calls_budget):
+    for _ in range(CALLS_PER_DAY):
         origin, destination, region = PRIORITY_ROUTES[route_idx]
         dep_date = SEARCH_DATES[date_idx]
 
@@ -187,7 +194,7 @@ def run_independent_search(calls_budget: int = 1) -> list[dict]:
         if date_idx == 0:
             route_idx = (route_idx + 1) % len(PRIORITY_ROUTES)
 
-        if calls_used < calls_budget:
+        if calls_used < CALLS_PER_DAY:
             time.sleep(0.5)
 
     # Salva estado para o próximo run
