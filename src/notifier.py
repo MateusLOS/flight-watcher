@@ -2,7 +2,7 @@ import logging
 
 import requests
 
-from src.config import TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, DRY_RUN, load_subscribers
+from src.config import TELEGRAM_BOT_TOKEN, DRY_RUN, load_subscribers
 
 logger = logging.getLogger(__name__)
 
@@ -38,21 +38,9 @@ def notify_error(context: str, error: Exception | str, critical: bool = False) -
     logger.error("[%s] %s: %s", label, context, error)
 
 
-def _send_status(text: str) -> None:
-    """Envia só para o dono (TELEGRAM_CHAT_ID) — status técnico, não para todos."""
-    if DRY_RUN:
-        print("[DRY RUN] Status:", text)
-        return
-    if not TELEGRAM_CHAT_ID:
-        return
-    try:
-        requests.post(
-            f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
-            json={"chat_id": TELEGRAM_CHAT_ID, "text": text, "parse_mode": "HTML"},
-            timeout=15,
-        )
-    except Exception as e:
-        logger.warning("Status send failed: %s", e)
+def notify_status(text: str) -> None:
+    """Confirmação de run — enviada para todos os assinantes."""
+    _send(text)
 
 
 def notify_no_results(origin: str, region: str) -> None:

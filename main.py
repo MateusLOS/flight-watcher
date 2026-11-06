@@ -18,7 +18,7 @@ from src.scorer import compute_opportunity_score
 from src.searcher import get_cheapest_destinations, get_cheapest_dates, get_exchange_rate
 from src.deals import fetch_deals
 from src.serp_searcher import run_independent_search
-from src.notifier import notify_offers, notify_daily_summary, notify_deals, notify_test, notify_error, notify_no_results, _send_status
+from src.notifier import notify_offers, notify_daily_summary, notify_deals, notify_test, notify_error, notify_no_results, notify_status
 
 logging.basicConfig(
     level=logging.INFO,
@@ -278,7 +278,7 @@ def main():
         # Nos outros runs, envia só uma linha confirmando que rodou
         hora = datetime.utcnow().strftime("%Hh%M UTC")
         total = len(all_offers)
-        _send_status(f"✅ Busca {hora} concluída — {total} rotas analisadas, nenhuma oferta acima do limite.")
+        notify_status(f"✅ Busca {hora} concluída — {total} rotas analisadas, nenhuma oferta acima do limite.")
 
     if deals:
         notify_deals(deals)
