@@ -10,7 +10,7 @@ Uso:
 import argparse
 import logging
 import os
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 from src.config import DRY_RUN, SERPAPI_KEY, load_routes, get_all_destination_airports, get_destination_region
 from src.history import load_history, save_history, update_route_price, get_route_stats
@@ -18,7 +18,7 @@ from src.scorer import compute_opportunity_score
 from src.searcher import get_cheapest_destinations, get_cheapest_dates, get_exchange_rate
 from src.deals import fetch_deals
 from src.serp_searcher import run_independent_search
-from src.notifier import notify_offers, notify_daily_summary, notify_deals, notify_test, notify_error, notify_no_results
+from src.notifier import notify_offers, notify_daily_summary, notify_deals, notify_test, notify_error, notify_no_results, _send_status
 
 logging.basicConfig(
     level=logging.INFO,
@@ -265,13 +265,20 @@ def main():
 
     deals = fetch_deals(routes)
 
-    if any(offers_by_tier[t] for t in ("MAXIMO", "EXCELENTE", "BOM")):
+    has_good_offers = any(offers_by_tier[t] for t in ("MAXIMO", "EXCELENTE", "BOM"))
+
+    if has_good_offers:
         notify_offers(offers_by_tier, routes)
 
-    # Resumo diário: apenas 1x/dia (run da manhã) para não poluir o Telegram
+    # Resumo diário: apenas 1x/dia (run da manhã)
     morning_run = os.getenv("SERPAPI_RUN", "false").lower() == "true"
     if morning_run:
         notify_daily_summary(all_offers, routes)
+    elif not has_good_offers:
+        # Nos outros runs, envia só uma linha confirmando que rodou
+        hora = datetime.utcnow().strftime("%Hh%M UTC")
+        total = len(all_offers)
+        _send_status(f"✅ Busca {hora} concluída — {total} rotas analisadas, nenhuma oferta acima do limite.")
 
     if deals:
         notify_deals(deals)
