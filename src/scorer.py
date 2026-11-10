@@ -18,9 +18,10 @@ WEIGHTS = {
 }
 
 TIER_THRESHOLDS = {
-    "MAXIMO":    85,
-    "EXCELENTE": 70,
-    "BOM":       55,
+    "MAXIMO":      75,   # antes 85 — histórico raso não atinge 85 facilmente
+    "EXCELENTE":   58,   # antes 70
+    "BOM":         42,   # antes 55
+    "INFORMATIVO": 0,    # novo: mostra qualquer oferta encontrada (fase cold start)
 }
 
 

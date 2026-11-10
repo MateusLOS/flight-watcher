@@ -62,7 +62,7 @@ def run_search(routes: dict, history: dict, fx: dict) -> tuple[dict, list]:
     origins = routes["origins"]
     months = _months_in_window(travel_window)
 
-    offers_by_tier: dict[str, list] = {"MAXIMO": [], "EXCELENTE": [], "BOM": [], "RESUMO": []}
+    offers_by_tier: dict[str, list] = {"MAXIMO": [], "EXCELENTE": [], "BOM": [], "INFORMATIVO": [], "RESUMO": []}
     all_offers: list[dict] = []
 
     sorted_origins = sorted(origins.items(), key=lambda x: x[1]["priority"])
@@ -228,7 +228,7 @@ def main():
         }
 
     # Inicializa estruturas antes de qualquer busca
-    offers_by_tier: dict[str, list] = {"MAXIMO": [], "EXCELENTE": [], "BOM": [], "RESUMO": []}
+    offers_by_tier: dict[str, list] = {"MAXIMO": [], "EXCELENTE": [], "BOM": [], "INFORMATIVO": [], "RESUMO": []}
     all_offers: list[dict] = []
 
     # SerpApi: busca independente em tempo real (apenas no run da manhã)
@@ -265,7 +265,7 @@ def main():
 
     deals = fetch_deals(routes)
 
-    has_good_offers = any(offers_by_tier[t] for t in ("MAXIMO", "EXCELENTE", "BOM"))
+    has_good_offers = any(offers_by_tier[t] for t in ("MAXIMO", "EXCELENTE", "BOM", "INFORMATIVO"))
 
     if has_good_offers:
         notify_offers(offers_by_tier, routes)

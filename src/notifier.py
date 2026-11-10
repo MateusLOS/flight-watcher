@@ -7,10 +7,11 @@ from src.config import TELEGRAM_BOT_TOKEN, DRY_RUN, load_subscribers
 logger = logging.getLogger(__name__)
 
 TIER_EMOJI = {
-    "MAXIMO":    "🔴",
-    "EXCELENTE": "🟡",
-    "BOM":       "✅",
-    "RESUMO":    "📊",
+    "MAXIMO":      "🔴",
+    "EXCELENTE":   "🟡",
+    "BOM":         "✅",
+    "INFORMATIVO": "ℹ️",
+    "RESUMO":      "📊",
 }
 
 REGION_NAMES = {
@@ -83,13 +84,15 @@ def notify_offers(offers_by_tier: dict[str, list], routes: dict) -> None:
     """
     total_sent = 0
 
-    for tier in ("MAXIMO", "EXCELENTE", "BOM"):
+    for tier in ("MAXIMO", "EXCELENTE", "BOM", "INFORMATIVO"):
         offers = offers_by_tier.get(tier, [])
-        # Sort by score descending
         offers.sort(key=lambda o: o["score"]["total"], reverse=True)
 
+        # INFORMATIVO: limita a 3 para não inundar
+        limit = 3 if tier == "INFORMATIVO" else MAX_ALERTS_PER_RUN
+
         for offer in offers:
-            if total_sent >= MAX_ALERTS_PER_RUN:
+            if total_sent >= limit:
                 break
             msg = _format_offer_message(offer)
             _send(msg)
@@ -199,6 +202,11 @@ def _format_offer_message(offer: dict) -> str:
         f"volatil:{breakdown.get('volatility',0):.0f}"
     )
 
+    # Aviso cold start quando histórico é raso
+    hist = offer.get("hist") or {}
+    n_obs = hist.get("n_obs", 0)
+    cold_start = f"\n⚠️ <i>Histórico ainda raso ({n_obs} obs) — score tende a ser conservador</i>" if n_obs < 10 else ""
+
     # Fonte dos dados
     source = offer.get("source", "travelpayouts")
     if source == "serpapi":
@@ -216,6 +224,7 @@ def _format_offer_message(offer: dict) -> str:
         f"{history_line}\n"
         f"🏢 {offer.get('carrier','')}"
         f"{source_line}"
+        f"{cold_start}"
         f"{vol_warning}{season_note}\n\n"
         f"🔗 <a href=\"{offer['booking_link']}\">Ver oferta</a>"
     )
