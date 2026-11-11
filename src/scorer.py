@@ -169,7 +169,7 @@ def compute_opportunity_score(
     #         break
     tier = "INFORMATIVO"
 
-    is_volatile = hist.get("last_14d") and len(hist["last_14d"]) >= 3 and (
+    is_volatile = hist is not None and bool(hist.get("last_14d")) and len(hist["last_14d"]) >= 3 and (
         np.std(hist["last_14d"]) / max(np.mean(hist["last_14d"]), 1) > 0.20
     )
 

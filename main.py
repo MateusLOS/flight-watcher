@@ -80,24 +80,36 @@ def run_search(routes: dict, history: dict, fx: dict) -> tuple[dict, list]:
         relevant = [o for o in raw if o["destination"] in target_set]
         logger.info("  %d relevant destinations found for %s", len(relevant), origin_code)
 
-        if relevant:
-            for offer in relevant:
-                dest = offer["destination"]
-                dep_date = offer.get("departure_date", "")
-                region = get_destination_region(dest, routes)
-                if not region:
-                    continue
-                if not (travel_window["from"] <= dep_date <= travel_window["to"]):
-                    continue
-                threshold = thresholds.get(region, 5000)
-                if offer["price_brl"] <= threshold * 1.5:
-                    try:
-                        _process_offer(offer, region, history, fx, offers_by_tier, all_offers)
-                    except Exception as e:
-                        notify_error(f"_process_offer {origin_code}→{dest}", e)
-        else:
-            # Phase 2 fallback — search hub routes month by month
-            logger.info("  Fallback: searching hubs month by month for %s", origin_code)
+        # Count how many Phase 1 offers survive the travel-window date filter.
+        # Travelpayouts /v2/prices/latest returns near-future dates (days/weeks ahead),
+        # not the Aug 2027–Feb 2028 window we want — so Phase 1 almost always yields 0
+        # date-valid offers even when it finds matching destination codes.
+        date_valid_count = 0
+        for offer in relevant:
+            dest = offer["destination"]
+            dep_date = offer.get("departure_date", "")
+            region = get_destination_region(dest, routes)
+            if not region:
+                continue
+            if not (travel_window["from"] <= dep_date <= travel_window["to"]):
+                continue
+            date_valid_count += 1
+            threshold = thresholds.get(region, 5000)
+            if offer["price_brl"] <= threshold * 1.5:
+                try:
+                    _process_offer(offer, region, history, fx, offers_by_tier, all_offers)
+                except Exception as e:
+                    notify_error(f"_process_offer {origin_code}→{dest}", e)
+
+        logger.info("  %d date-valid offers for %s (window %s–%s)",
+                    date_valid_count, origin_code,
+                    travel_window["from"], travel_window["to"])
+
+        # Phase 2 — targeted month-by-month hub search.
+        # Runs whenever Phase 1 produced no date-valid offers (the common case because
+        # the /latest endpoint only has near-future cache) OR when Phase 1 found nothing.
+        if date_valid_count == 0:
+            logger.info("  Phase 2: hub month-by-month search for %s", origin_code)
             any_fallback_result = False
             for region, hub_list in hubs.items():
                 threshold = thresholds.get(region, 5000)
