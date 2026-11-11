@@ -3,5 +3,45 @@
     "version": "1.0",
     "created": "2026-11-04",
     "description": "Historical price percentiles per route for scoring"
+  },
+  "GIG→FCO:all": {
+    "observations": [
+      {
+        "date": "2026-11-11",
+        "price": 4191.0
+      }
+    ],
+    "last_updated": "2026-11-11",
+    "last_7d": [
+      4191.0
+    ],
+    "last_14d": [
+      4191.0
+    ],
+    "last_30d": [
+      4191.0
+    ],
+    "n_obs": 1,
+    "last_price": 4191.0
+  },
+  "GIG→FCO:low": {
+    "observations": [
+      {
+        "date": "2026-11-11",
+        "price": 4191.0
+      }
+    ],
+    "last_updated": "2026-11-11",
+    "last_7d": [
+      4191.0
+    ],
+    "last_14d": [
+      4191.0
+    ],
+    "last_30d": [
+      4191.0
+    ],
+    "n_obs": 1,
+    "last_price": 4191.0
   }
 }
