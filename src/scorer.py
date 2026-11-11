@@ -160,11 +160,14 @@ def compute_opportunity_score(
 
     total = sum(scores[k] * WEIGHTS[k] for k in scores)
 
-    tier = "RESUMO"
-    for t, threshold in TIER_THRESHOLDS.items():
-        if total >= threshold:
-            tier = t
-            break
+    # Filtro de tier desativado — histórico insuficiente para scoring confiável.
+    # Toda oferta encontrada vai como INFORMATIVO até acumular dados suficientes.
+    # tier = "RESUMO"
+    # for t, threshold in TIER_THRESHOLDS.items():
+    #     if total >= threshold:
+    #         tier = t
+    #         break
+    tier = "INFORMATIVO"
 
     is_volatile = hist.get("last_14d") and len(hist["last_14d"]) >= 3 and (
         np.std(hist["last_14d"]) / max(np.mean(hist["last_14d"]), 1) > 0.20
