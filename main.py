@@ -276,9 +276,10 @@ def main():
         notify_daily_summary(all_offers, routes)
     elif not has_good_offers:
         # Nos outros runs, envia só uma linha confirmando que rodou
-        hora = datetime.utcnow().strftime("%Hh%M UTC")
+        from datetime import timezone, timedelta as td
+        brt = datetime.now(timezone(td(hours=-3))).strftime("%Hh%M BRT")
         total = len(all_offers)
-        notify_status(f"✅ Busca {hora} concluída — {total} rotas analisadas, nenhuma oferta acima do limite.")
+        notify_status(f"✅ Busca {brt} concluída — {total} rotas analisadas, nenhuma oferta acima do limite.")
 
     if deals:
         notify_deals(deals)
