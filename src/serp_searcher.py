@@ -100,8 +100,7 @@ def _save_state(state: dict) -> None:
 
 
 def _build_google_flights_link(origin: str, destination: str, dep_date: str) -> str:
-    d = dep_date.replace("-", "")
-    return f"https://www.google.com/travel/flights#search;f={origin};t={destination};d={d};tt=o"
+    return f"https://www.kayak.com.br/flights/{origin}-{destination}/{dep_date}?sort=price_a"
 
 
 def _search(origin: str, destination: str, dep_date: str) -> list[dict]:

@@ -140,6 +140,5 @@ def get_exchange_rate() -> dict:
 
 
 def _build_link(origin: str, destination: str, departure: str) -> str:
-    """Deep link to Aviasales.com.br (Travelpayouts partner) for the route."""
-    date_compact = departure.replace("-", "") if departure else ""
-    return f"https://www.aviasales.com.br/search/{origin}{date_compact}{destination}1"
+    """Deep link to Kayak BR — suporta datas futuras (2027+)."""
+    return f"https://www.kayak.com.br/flights/{origin}-{destination}/{departure}?sort=price_a"
