@@ -121,10 +121,12 @@ def notify_daily_summary(all_offers: list, routes: dict) -> None:
         p50 = hist.get("percentiles", {}).get("p50")
         vs_media = f" (média R$ {p50:,.0f})" if p50 else ""
 
+        src = best.get("source", "travelpayouts")
+        price_tag = "~R$" if src != "serpapi" else "R$"
         lines.append(
             f"{tier_emoji} <b>{region_name}</b>  {best['origin']}→{best['destination']}\n"
-            f"   💰 R$ {best['price_brl']:,.0f}{vs_media} · {best['departure_date'][:7]}\n"
-            f"   🔗 <a href=\"{best['booking_link']}\">Ver oferta</a>"
+            f"   💰 {price_tag} {best['price_brl']:,.0f}{vs_media} · {best['departure_date'][:7]}\n"
+            f"   🔗 <a href=\"{best['booking_link']}\">Buscar no Kayak</a>"
         )
 
     _send("\n\n".join(lines))
@@ -207,12 +209,14 @@ def _format_offer_message(offer: dict) -> str:
     n_obs = hist.get("n_obs", 0)
     cold_start = f"\n⚠️ <i>Histórico ainda raso ({n_obs} obs) — score tende a ser conservador</i>" if n_obs < 10 else ""
 
-    # Fonte dos dados
+    # Fonte dos dados e aviso de preço
     source = offer.get("source", "travelpayouts")
     if source == "serpapi":
-        source_line = "\n🔍 <i>Fonte: Google Flights (tempo real)</i>"
+        source_line = "\n🔍 <i>Fonte: Google Flights (~15min — preço próximo do real)</i>"
+        price_note = ""
     else:
         source_line = "\n🗄️ <i>Fonte: Travelpayouts (cache 24–48h)</i>"
+        price_note = "\n⚠️ <i>Preço indicativo — confirme o valor atual ao clicar</i>"
 
     return (
         f"{emoji} <b>OFERTA {tier}</b> — Score: {score['total']}/100\n"
@@ -220,11 +224,12 @@ def _format_offer_message(offer: dict) -> str:
         f"✈️ {offer['origin']} → {offer['destination']} | {region_name}\n"
         f"📅 {offer['departure_date']} · {stops} escala(s){layover_str}\n"
         f"⏱️ {duration_str} total\n"
-        f"💰 <b>R$ {offer['price_brl']:,.0f}</b>"
+        f"💰 <b>~R$ {offer['price_brl']:,.0f}</b> (visto em cache)"
         f"{history_line}\n"
         f"🏢 {offer.get('carrier','')}"
         f"{source_line}"
+        f"{price_note}"
         f"{cold_start}"
         f"{vol_warning}{season_note}\n\n"
-        f"🔗 <a href=\"{offer['booking_link']}\">Ver oferta</a>"
+        f"🔗 <a href=\"{offer['booking_link']}\">Buscar no Kayak</a>"
     )
