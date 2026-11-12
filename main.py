@@ -53,7 +53,8 @@ def _months_in_window(travel_window: dict) -> list[str]:
     return months
 
 
-def run_search(routes: dict, history: dict, fx: dict) -> tuple[dict, list]:
+def run_search(routes: dict, history: dict, fx: dict,
+               seen: set | None = None) -> tuple[dict, list]:
     all_dest_by_region = get_all_destination_airports(routes)
     target_set = {code for codes in all_dest_by_region.values() for code in codes}
     travel_window = routes["travel_window"]
@@ -97,7 +98,7 @@ def run_search(routes: dict, history: dict, fx: dict) -> tuple[dict, list]:
             threshold = thresholds.get(region, 5000)
             if offer["price_brl"] <= threshold * 1.5:
                 try:
-                    _process_offer(offer, region, history, fx, offers_by_tier, all_offers)
+                    _process_offer(offer, region, history, fx, offers_by_tier, all_offers, seen)
                 except Exception as e:
                     notify_error(f"_process_offer {origin_code}→{dest}", e)
 
@@ -125,7 +126,7 @@ def run_search(routes: dict, history: dict, fx: dict) -> tuple[dict, list]:
                             if offer["price_brl"] <= threshold * 1.3:
                                 try:
                                     _process_offer(offer, region, history, fx,
-                                                   offers_by_tier, all_offers)
+                                                   offers_by_tier, all_offers, seen)
                                 except Exception as e:
                                     notify_error(f"_process_offer fallback {origin_code}→{hub}", e)
             if not any_fallback_result:
@@ -135,7 +136,8 @@ def run_search(routes: dict, history: dict, fx: dict) -> tuple[dict, list]:
 
 
 def _process_offer(offer: dict, region: str, history: dict, fx: dict,
-                   offers_by_tier: dict, all_offers: list) -> None:
+                   offers_by_tier: dict, all_offers: list,
+                   seen: set | None = None) -> None:
     origin = offer["origin"]
     dest = offer["destination"]
     dep_date = offer.get("departure_date", "")
@@ -143,6 +145,12 @@ def _process_offer(offer: dict, region: str, history: dict, fx: dict,
 
     if not dep_date:
         return
+
+    dedup_key = (origin, dest, dep_date)
+    if seen is not None:
+        if dedup_key in seen:
+            return
+        seen.add(dedup_key)
 
     hist = get_route_stats(history, origin, dest, dep_date)
 
@@ -171,7 +179,8 @@ def _process_offer(offer: dict, region: str, history: dict, fx: dict,
 
 
 def also_check_via_sp(routes: dict, history: dict, fx: dict,
-                      offers_by_tier: dict, all_offers: list) -> None:
+                      offers_by_tier: dict, all_offers: list,
+                      seen: set | None = None) -> None:
     """Multi-origin arbitrage: compare direct CNF flights vs CNF→GRU→destination."""
     bh_to_sp = routes.get("ground_transport_costs_brl", {}).get("BH_to_SP_bus", 180)
 
@@ -202,7 +211,7 @@ def also_check_via_sp(routes: dict, history: dict, fx: dict,
                 f"Via SP: R${best_gru['price_brl']:,.0f} + R${bh_to_sp} ônibus "
                 f"= R${total_via_sp:,.0f} (economiza R${savings:,.0f} vs CNF direto)"
             )
-            _process_offer(best_gru, region, history, fx, offers_by_tier, all_offers)
+            _process_offer(best_gru, region, history, fx, offers_by_tier, all_offers, seen)
 
 
 def main():
@@ -242,6 +251,7 @@ def main():
     # Inicializa estruturas antes de qualquer busca
     offers_by_tier: dict[str, list] = {"MAXIMO": [], "EXCELENTE": [], "BOM": [], "INFORMATIVO": [], "RESUMO": []}
     all_offers: list[dict] = []
+    seen_offers: set[tuple] = set()  # dedup global por (origin, destination, departure_date)
 
     # SerpApi: busca independente em tempo real (apenas no run da manhã)
     if SERPAPI_KEY:
@@ -251,14 +261,14 @@ def main():
             for offer in serp_offers:
                 region = offer.get("region", "europa")
                 try:
-                    _process_offer(offer, region, history, fx, offers_by_tier, all_offers)
+                    _process_offer(offer, region, history, fx, offers_by_tier, all_offers, seen_offers)
                 except Exception as e:
                     logger.warning("_process_offer(SerpApi) falhou: %s", e)
         except Exception as e:
             logger.error("run_independent_search(SerpApi) falhou: %s", e)
 
     logger.info("Starting Travelpayouts search...")
-    tp_offers_by_tier, tp_all_offers = run_search(routes, history, fx)
+    tp_offers_by_tier, tp_all_offers = run_search(routes, history, fx, seen_offers)
 
     # Mescla resultados Travelpayouts com SerpApi
     for tier in offers_by_tier:
@@ -266,7 +276,7 @@ def main():
     all_offers.extend(tp_all_offers)
 
     logger.info("Checking multi-origin arbitrage...")
-    also_check_via_sp(routes, history, fx, offers_by_tier, all_offers)
+    also_check_via_sp(routes, history, fx, offers_by_tier, all_offers, seen_offers)
 
     logger.info(
         "Done. MAXIMO=%d EXCELENTE=%d BOM=%d",
