@@ -258,8 +258,15 @@ def main():
         logger.info("SerpApi: busca independente em tempo real...")
         try:
             serp_offers = run_independent_search()
+            thresholds = routes["thresholds_brl"]
             for offer in serp_offers:
                 region = offer.get("region", "europa")
+                price_limit = thresholds.get(region, 5000) * 1.5
+                if offer["price_brl"] > price_limit:
+                    logger.info("  SerpApi ignorado (R$%.0f > limite R$%.0f): %s→%s",
+                                offer["price_brl"], price_limit,
+                                offer["origin"], offer["destination"])
+                    continue
                 try:
                     _process_offer(offer, region, history, fx, offers_by_tier, all_offers, seen_offers)
                 except Exception as e:

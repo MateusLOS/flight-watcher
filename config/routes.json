@@ -95,9 +95,9 @@
     "to": "2028-02-28"
   },
   "thresholds_brl": {
-    "europa": 3500,
-    "america_norte": 2800,
-    "asia": 4000
+    "europa": 2500,
+    "america_norte": 2000,
+    "asia": 3000
   },
   "max_stops": 2,
   "booking_windows": {
